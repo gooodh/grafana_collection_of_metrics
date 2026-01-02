@@ -151,7 +151,7 @@ sqlalchemy==2.0.44
     # via
     #   alembic
     #   fastapi-sqlalchemy-temp
-starlette==0.48.0
+starlette==0.50.0
     # via
     #   fastapi
     #   prometheus-fastapi-instrumentator
