@@ -1,0 +1,83 @@
+services:
+  app:
+    restart: always
+    build: .
+    container_name: "app"
+    command: bash entrypoint.sh
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db_postgres
+
+  db_postgres:
+    image: postgres:15
+    container_name: app_postgres_container
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - app_postgres:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: app_pgadmin_container
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@pgadmin.com
+      PGADMIN_DEFAULT_PASSWORD: password
+      PGADMIN_LISTEN_PORT: 80
+    ports:
+      - 15432:80
+    volumes:
+      - app_pgadmin:/var/lib/pgadmin
+    depends_on:
+      - db_postgres
+
+  loki:
+    image: grafana/loki:latest
+    container_name: "grafana_loki"
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki-config.yml:/etc/loki/local-config.yml:ro
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: "grafana"
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+  promtail:
+    image: grafana/promtail:2.9.0
+    container_name: promtail
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./promtail-config.yaml:/etc/promtail/config.yml
+    command: -config.file=/etc/promtail/config.yml
+    privileged: true
+    depends_on:
+      - loki
+
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+    depends_on:
+      - loki
+
+volumes:
+  app_postgres:
+  app_pgadmin:
+  grafana_data:

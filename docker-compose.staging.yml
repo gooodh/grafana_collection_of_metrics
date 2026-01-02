@@ -1,0 +1,110 @@
+services:
+  app:
+    restart: always
+    image: ghcr.io/${GITHUB_REPOSITORY}:develop
+    container_name: "app_staging"
+    command: bash entrypoint.sh
+    ports:
+      - "8081:8080"  # Другой порт для staging
+    environment:
+      - ENVIRONMENT=staging
+    env_file:
+      - .env.staging
+    depends_on:
+      - db_postgres
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  watchtower:
+    image: containrrr/watchtower
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /root/.docker/config.json:/config.json:ro
+    command:
+      - --cleanup=true
+      - --interval=300
+      - --label-enable=true
+      - --rolling-restart=true
+    environment:
+      - WATCHTOWER_NOTIFICATIONS=slack
+      - WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL=${SLACK_WEBHOOK_URL}
+      - WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER=staging-watchtower
+
+  db_postgres:
+    image: postgres:15
+    container_name: app_postgres_staging_container
+    restart: always
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-staging_db}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - app_postgres_staging:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"  # Другой порт для staging
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: app_pgadmin_staging_container
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@staging.pgadmin.com
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-staging_password}
+      PGADMIN_LISTEN_PORT: 80
+    ports:
+      - "15433:80"  # Другой порт для staging
+    volumes:
+      - app_pgadmin_staging:/var/lib/pgadmin
+    depends_on:
+      - db_postgres
+
+  # Мониторинг для staging (опционально)
+  loki:
+    image: grafana/loki:latest
+    container_name: "grafana_loki_staging"
+    ports:
+      - "3101:3100"
+    volumes:
+      - ./loki-config.yml:/etc/loki/local-config.yml:ro
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: "grafana_staging"
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data_staging:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-staging_admin}
+
+  promtail:
+    image: grafana/promtail:2.9.0
+    container_name: promtail_staging
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./promtail-config.yaml:/etc/promtail/config.yml
+    command: -config.file=/etc/promtail/config.yml
+    privileged: true
+    depends_on:
+      - loki
+
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    container_name: prometheus_staging
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus-data-staging:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+    depends_on:
+      - loki
+
+volumes:
+  app_postgres_staging:
+  app_pgadmin_staging:
+  grafana_data_staging:
