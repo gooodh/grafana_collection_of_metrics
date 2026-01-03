@@ -1,0 +1,95 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+*.md
+docs/
+
+# Development tools
+.vscode/
+.pre-commit-config.yaml
+mypy-ci.ini
+pytest.ini
+
+# Environment files
+.env
+.env.*
+!.env.staging.example
+
+# Python cache and build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+build/
+dist/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+nosetests.xml
+
+# Type checking
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pytype/
+
+# Logs
+*.log
+
+# Database files
+*.sqlite3
+*.db
+test.db
+
+# Docker files (avoid recursive copying)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# CI/CD
+.github/
+reports/
+performance-results/
+bandit-report.json
+safety-report.json
+
+# Monitoring configs (not needed in container)
+prometheus.yml
+loki-config.yml
+promtail-config.yaml
+grafana/
+prometheus-data/
+
+# ApacheBench testing
+ab/
+
+# Scripts (unless needed in production)
+scripts/
+
+# Lock files (depending on your build strategy)
+# uv.lock
+# requirements.txt
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
