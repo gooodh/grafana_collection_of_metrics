@@ -1,114 +1,161 @@
-# FastAPI_SQLAlchemy_Temp
+# Grafana Collection of Metrics
 
-This project is a ready-made template for developing scalable web applications based on Facetapi with a full-fledged authentication and authorization system. The project includes a modular architecture, supports flexible logging with logoru, and database interaction via SQLAlchemy with asynchronous support.
+This project demonstrates a complete monitoring and log collection system using a modern stack of tools: **Grafana**, **Loki**, **Prometheus**, and **Promtail**.
 
-## The main structure of the project
+## Project Goal
+
+The main goal of the project is to show how to integrate and configure an observability system for a FastAPI web application:
+
+- **Grafana** — visualization of metrics and logs through dashboards
+- **Prometheus** — collection and storage of application metrics
+- **Loki** — aggregation and storage of logs
+- **Promtail** — agent for collecting logs and sending them to Loki
+
+The project includes a ready-made FastAPI application with an authentication system that generates metrics and logs to demonstrate monitoring capabilities.
+
+## What the Monitoring System Includes
+
+### 📊 Grafana Dashboard
+- Visualization of application performance metrics
+- Monitoring of HTTP requests, response time, errors
+- Real-time log display
+- Configured alerts and notifications
+
+### 📈 Prometheus Metrics
+- Collection of FastAPI application metrics
+- Monitoring of system resources (CPU, memory, disk)
+- Database and external service metrics
+- Custom business metrics
+
+### 📝 Loki Logs Aggregation
+- Centralized storage of application logs
+- Structured logs with labels
+- Fast log search and filtering
+- Integration with Grafana for metrics and logs correlation
+
+### 🚀 Promtail Log Collection
+- Automatic log collection from containers
+- Log parsing and enrichment with labels
+- Real-time log sending to Loki
+
+![Grafana Dashboard - Metrics Overview](ab/screenshot_1.png)
+![Grafana Dashboard - Detailed Analytics](ab/screenshot_2.png)
+![Loki Logs - Log Viewing](ab/screenshot_3.png)
+![Prometheus Metrics - System Monitoring](ab/screenshot_4.png)
+
+## Project Architecture
 
 ```
-├── app/
-│ ├── auth/
-│ │ ├── auth.py
-│ │ ├── dao.py
-│ │ ├── dependencies.py
-│ │ ├── models.py
-│ │ ├── router.py
-│ │ ├── schemas.py
-│ │ └── utils.py
-│ ├── dao/
-│ │ └── base.py
-│ ├── migration/
-│ │ ├── versions/
-│ │ ├── env.py
-│ │ ├── README
-│ │ └── script.py.mako
-│ ├── static/
-│ │ └── .gitkeep
-│ ├── config.py
-│ ├── database.py
-│ ├── exceptions.py
-│ ├── main.py
-├── data/
-│ └── db.sqlite3
-├── .env
-├── .gitignore
-├── alembic.ini
-├── README.md
-├── command
-├── docker-compose.yml
-├── Dockerfile
-├── entrypoint.sh
-├── JSON_model.json
-├── loki-config.yml
-├── prometheus.yml
-├── promtail-config.yaml
-├── pyproject.toml
-├── uv.lock
-└── requirements.txt
-
+├── app/                          # FastAPI application
+│   ├── auth/                     # Authentication module
+│   ├── dao/                      # Data Access Objects
+│   ├── migration/                # Database migrations
+│   ├── static/                   # Static files
+│   ├── config.py                 # Application configuration
+│   ├── main.py                   # FastAPI entry point
+│   └── exceptions.py             # Exception handling
+├── grafana/                      # Grafana configuration
+├── ab/                          # Load testing results
+├── prometheus.yml               # Prometheus configuration
+├── loki-config.yml             # Loki configuration
+├── promtail-config.yaml        # Promtail configuration
+├── docker-compose.yml          # Main Docker configuration
+├── docker-compose.staging.yml  # Staging environment
+├── docker-compose.prod.yml     # Production environment
+└── docker-compose.test.yml     # Test environment
 ```
 
-## First, copy the application:
+## Quick Start
+
+### 1. Clone the Repository
 ```bash
-git clone git@github.com:gooodh/FastAPI_SQLAlchemy_Temp.git
+git clone https://github.com/gooodh/grafana_collection_of_metrics.git
+cd grafana_collection_of_metrics
 ```
-## To launch, use the command:
 
+### 2. Start the Monitoring System
 ```bash
 docker compose up --build -d
 ```
-## Grafana has been added to the app:
 
-If Grafana is not needed, comment out these lines in docker-compose.yml
-```yml
-loki:
-  image: grafana/loki:latest
-  container_name: "grafana_loki"
-  ports:
-  - "3100:3100"
-  volumes:
-  - ./loki-config.yml:/etc/loki/local-config.yml:ro
+### 3. Access Services
 
-grafana:
-  image: grafana/grafana:latest
-  container_name: "grafana"
-  ports:
-  - "3000:3000"
-  volumes:
-  - grafana_data:/var/lib/grafana
+After startup, the following services will be available:
 
-promtail:
-  image: grafana/promtail:2.9.0
-  container_name: promtail
-  volumes:
-  - /var/lib/docker/containers:/var/lib/docker/containers:ro
-  - /var/run/docker.sock:/var/run/docker.sock
-  - ./promtail-config.yaml:/etc/promtail/config.yml
-  command: -config.file=/etc/promtail/config.yml
-  privileged: true
-  depends_on:
-  - loki
-prometheus:
-  image: prom/prometheus:v2.52.0
-  container_name: prometheus
-  ports:
-  - "9090:9090"
-  volumes:
-  - ./prometheus.yml:/etc/prometheus/prometheus.yml
-  - ./prometheus-data:/prometheus
-  command:
-  - '--config.file=/etc/prometheus/prometheus.yml'
-  - '--storage.tsdb.path=/prometheus'
-  - '--web.enable-lifecycle'
-  depends_on:
-  - loki
+- **FastAPI Application**: http://localhost:8000
+- **Grafana**: http://localhost:3000 (admin/admin)
+- **Prometheus**: http://localhost:9090
+- **Loki**: http://localhost:3100
+
+### 4. Generate Test Data
+
+To demonstrate the monitoring system, you can generate load:
+
+```bash
+# Install Apache Bench (if not installed)
+sudo apt-get install apache2-utils
+
+# Generate HTTP requests
+ab -n 1000 -c 10 http://localhost:8000/
 ```
-## Чтобы получить такой дашборд:
 
-Copy the contents of JSON_model.json to the Grafana settings
+## Monitoring Configuration
 
+### Prometheus
+Configuration in `prometheus.yml` file:
+- Collect metrics from FastAPI application every 15 seconds
+- Monitor Prometheus itself
+- Configure alerting rules
 
+### Loki
+Configuration in `loki-config.yml` file:
+- Store logs in local filesystem
+- Configure indexes for fast search
+- Log retention settings
 
-![grafana](ab/screenshot_1.png)
-![grafana](ab/screenshot_2.png)
-![grafana](ab/screenshot_3.png)
-![grafana](ab/screenshot_4.png)
+### Promtail
+Configuration in `promtail-config.yaml` file:
+- Collect logs from Docker containers
+- Parse JSON logs
+- Add labels for filtering
+
+### Grafana
+- Pre-installed dashboards for FastAPI monitoring
+- Data sources: Prometheus and Loki
+- Configured alerts and notifications
+
+## Useful Commands
+
+```bash
+# View service logs
+docker compose logs -f grafana
+docker compose logs -f prometheus
+docker compose logs -f loki
+docker compose logs -f promtail
+
+# Restart individual service
+docker compose restart grafana
+
+# Stop all services
+docker compose down
+
+# Clean up data (careful!)
+docker compose down -v
+```
+
+## Monitoring in Different Environments
+
+The project supports different configurations for various environments:
+
+- **Development**: `docker-compose.yml`
+- **Testing**: `docker-compose.test.yml`
+- **Staging**: `docker-compose.staging.yml`
+- **Production**: `docker-compose.prod.yml`
+
+```bash
+# Run in staging environment
+docker compose -f docker-compose.staging.yml up -d
+
+# Run in production environment
+docker compose -f docker-compose.prod.yml up -d
+```
