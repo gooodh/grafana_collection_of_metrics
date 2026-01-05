@@ -30,7 +30,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "bf335yluevx8gc"
+        "uid": "af2skpy1604cge"
       },
       "fieldConfig": {
         "defaults": {
@@ -113,7 +113,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "bf335yluevx8gc"
+        "uid": "af2skpy1604cge"
       },
       "fieldConfig": {
         "defaults": {
@@ -204,7 +204,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "bf335yluevx8gc"
+        "uid": "af2skpy1604cge"
       },
       "fieldConfig": {
         "defaults": {
@@ -282,7 +282,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "bf335yluevx8gc"
+        "uid": "af2skpy1604cge"
       },
       "fieldConfig": {
         "defaults": {
@@ -439,7 +439,7 @@
         },
         "datasource": {
           "type": "prometheus",
-          "uid": "bf335yluevx8gc"
+          "uid": "af2skpy1604cge"
         },
         "definition": "label_values(http_requests_total,app_name)",
         "includeAll": false,
