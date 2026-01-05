@@ -122,7 +122,7 @@ jobs:
         safety check --json --output safety-report.json || true
 
     - name: Upload security reports
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: security-reports
         path: |
@@ -306,7 +306,7 @@ jobs:
         pytest tests/test_performance.py -v -m slow --tb=short
 
     - name: Upload performance results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: performance-results
         path: performance-results/
