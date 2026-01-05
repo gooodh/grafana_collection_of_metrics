@@ -5,9 +5,12 @@ services:
     container_name: "app"
     command: bash entrypoint.sh
     ports:
-      - "8080:8080"
+      - "8000:8000"
     depends_on:
       - db_postgres
+    labels:
+      - "logging=promtail"
+      - "service=fastapi"
 
   db_postgres:
     image: postgres:15
@@ -36,7 +39,7 @@ services:
 
   loki:
     image: grafana/loki:latest
-    container_name: "grafana_loki"
+    container_name: "loki"
     ports:
       - "3100:3100"
     volumes:
@@ -52,14 +55,14 @@ services:
       - ./grafana/provisioning:/etc/grafana/provisioning
 
   promtail:
-    image: grafana/promtail:2.9.0
+    image: grafana/promtail:3.0.0
     container_name: promtail
     volumes:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock
       - ./promtail-config.yaml:/etc/promtail/config.yml
     command: -config.file=/etc/promtail/config.yml
-    privileged: true
+    user: root
     depends_on:
       - loki
 
