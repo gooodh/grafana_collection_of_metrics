@@ -26,3 +26,13 @@ scrape_configs:
     metrics_path: /metrics
     static_configs:
       - targets: ['app:8000']
+    scrape_interval: 15s
+    scrape_timeout: 10s
+
+  # --- FastAPI Health Check metrics (JSON) ---
+  - job_name: 'fastapi_health'
+    metrics_path: /health/metrics
+    static_configs:
+      - targets: ['app:8000']
+    scrape_interval: 30s
+    scrape_timeout: 10s

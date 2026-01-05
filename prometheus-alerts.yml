@@ -1,0 +1,92 @@
+groups:
+  - name: fastapi_health_alerts
+    rules:
+      # Алерт при недоступности приложения
+      - alert: FastAPIDown
+        expr: up{job="fastapi_app"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "FastAPI приложение недоступно"
+          description: "FastAPI приложение {{ $labels.instance }} недоступно более 1 минуты"
+
+      # Алерт при проблемах с БД
+      - alert: DatabaseConnectionDown
+        expr: database_connection_status == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Потеряно соединение с базой данных"
+          description: "База данных недоступна для приложения {{ $labels.instance }}"
+
+      # Алерт при медленном отклике БД
+      - alert: DatabaseSlowResponse
+        expr: database_response_time_seconds > 1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Медленный отклик базы данных"
+          description: "База данных отвечает медленно: {{ $value }}s на {{ $labels.instance }}"
+
+      # Алерт при высокой нагрузке на CPU
+      - alert: HighCPUUsage
+        expr: system_cpu_percent > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Высокая нагрузка на CPU"
+          description: "CPU использование {{ $value }}% на {{ $labels.instance }}"
+
+      # Алерт при высоком использовании памяти
+      - alert: HighMemoryUsage
+        expr: system_memory_percent > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Высокое использование памяти"
+          description: "Память использована на {{ $value }}% на {{ $labels.instance }}"
+
+      # Алерт при высоком использовании диска
+      - alert: HighDiskUsage
+        expr: system_disk_percent > 90
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Критически высокое использование диска"
+          description: "Диск использован на {{ $value }}% на {{ $labels.instance }}"
+
+      # Алерт при высоком количестве медленных запросов
+      - alert: HighSlowRequestsRate
+        expr: rate(slow_requests_total[5m]) > 0.1
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Высокий процент медленных запросов"
+          description: "{{ $value }} медленных запросов в секунду на {{ $labels.instance }}"
+
+      # Алерт при высоком проценте ошибок
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Высокий процент ошибок HTTP"
+          description: "{{ $value | humanizePercentage }} ошибок 5xx на {{ $labels.instance }}"
+
+      # Алерт при недоступности health check endpoints
+      - alert: HealthCheckFailing
+        expr: rate(health_check_requests_total{status!="success",status!="healthy",status!="ready",status!="alive"}[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Health check endpoints возвращают ошибки"
+          description: "Health check endpoint {{ $labels.endpoint }} возвращает статус {{ $labels.status }} на {{ $labels.instance }}"

@@ -8,6 +8,7 @@ from loguru import logger
 from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.auth.router import router as router_auth
+from app.health import router as health_router
 
 
 @asynccontextmanager
@@ -48,6 +49,10 @@ def create_app() -> FastAPI:
 
     # Регистрация роутеров
     register_routers(app)
+    
+    # Настройка Prometheus мониторинга
+    instrumentator = Instrumentator()
+    instrumentator.instrument(app).expose(app)
 
     return app
 
@@ -64,9 +69,8 @@ def register_routers(app: FastAPI) -> None:
     # Подключение роутеров
     app.include_router(root_router, tags=["root"])
     app.include_router(router_auth, prefix="/auth", tags=["Auth"])
+    app.include_router(health_router, tags=["Health"])
 
 
 # Создание экземпляра приложения
 app = create_app()
-
-Instrumentator().instrument(app).expose(app)
