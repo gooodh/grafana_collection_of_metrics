@@ -416,7 +416,7 @@
           },
           "direction": "backward",
           "editorMode": "code",
-          "expr": "{compose_service=\"app\"}",
+          "expr": "{job=\"containerlogs\"}",
           "legendFormat": "",
           "queryType": "range",
           "refId": "A"
