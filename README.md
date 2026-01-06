@@ -15,25 +15,25 @@ The project includes a ready-made FastAPI application with an authentication sys
 
 ## What the Monitoring System Includes
 
-### 📊 Grafana Dashboard
+### Grafana Dashboard
 - Visualization of application performance metrics
 - Monitoring of HTTP requests, response time, errors
 - Real-time log display
 - Configured alerts and notifications
 
-### 📈 Prometheus Metrics
+### Prometheus Metrics
 - Collection of FastAPI application metrics
 - Monitoring of system resources (CPU, memory, disk)
 - Database and external service metrics
 - Custom business metrics
 
-### 📝 Loki Logs Aggregation
+### Loki Logs Aggregation
 - Centralized storage of application logs
 - Structured logs with labels
 - Fast log search and filtering
 - Integration with Grafana for metrics and logs correlation
 
-### 🚀 Promtail Log Collection
+### Promtail Log Collection
 - Automatic log collection from containers
 - Log parsing and enrichment with labels
 - Real-time log sending to Loki
@@ -100,6 +100,44 @@ ab -n 1000 -c 10 http://localhost:8000/
 ```
 
 ## Monitoring Configuration
+
+### Health Check Endpoints
+
+Приложение предоставляет расширенные health check endpoints с интеграцией Prometheus:
+
+- `GET /health` - базовая проверка состояния
+- `GET /health/detailed` - детальная проверка с БД и системными ресурсами  
+- `GET /health/ready` - readiness probe для Kubernetes
+- `GET /health/live` - liveness probe для Kubernetes
+- `GET /health/metrics` - метрики здоровья в JSON формате
+- `GET /metrics` - Prometheus метрики
+
+```bash
+# Тестирование health endpoints
+make health-check
+
+# Просмотр метрик здоровья
+make health-metrics
+```
+
+### Prometheus Метрики
+
+Приложение автоматически экспортирует следующие метрики:
+
+**Стандартные FastAPI метрики:**
+- `http_requests_total` - общее количество HTTP запросов
+- `http_request_duration_seconds` - время выполнения запросов
+- `http_requests_inprogress` - запросы в процессе выполнения
+
+**Кастомные метрики здоровья:**
+- `database_connection_status` - статус подключения к БД
+- `database_response_time_seconds` - время отклика БД
+- `system_cpu_percent` - использование CPU
+- `system_memory_percent` - использование памяти
+- `system_disk_percent` - использование диска
+- `health_check_requests_total` - количество health check запросов
+- `fast_requests_total` - количество быстрых запросов (< 100ms)
+- `slow_requests_total` - количество медленных запросов (> 1s)
 
 ### Prometheus
 Configuration in `prometheus.yml` file:
