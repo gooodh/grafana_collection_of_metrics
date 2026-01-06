@@ -19,7 +19,10 @@ certifi==2025.10.5
     # via
     #   httpcore
     #   httpx
+    #   requests
     #   sentry-sdk
+charset-normalizer==3.4.4
+    # via requests
 click==8.3.0
     # via
     #   rich-toolkit
@@ -63,6 +66,7 @@ idna==3.11
     #   anyio
     #   email-validator
     #   httpx
+    #   requests
 itsdangerous==2.2.0
     # via fastapi
 jinja2==3.1.6
@@ -81,18 +85,15 @@ markupsafe==3.0.3
     #   mako
 mdurl==0.1.2
     # via markdown-it-py
-mypy==1.18.2
-mypy-extensions==1.1.0
-    # via mypy
 orjson==3.11.3
     # via fastapi
 passlib==1.7.4
     # via fastapi-sqlalchemy-temp
-pathspec==0.12.1
-    # via mypy
 prometheus-client==0.23.1
     # via prometheus-fastapi-instrumentator
 prometheus-fastapi-instrumentator==7.1.0
+    # via fastapi-sqlalchemy-temp
+psutil==7.2.1
     # via fastapi-sqlalchemy-temp
 pyasn1==0.6.1
     # via
@@ -178,7 +179,9 @@ typing-inspection==0.4.2
 ujson==5.11.0
     # via fastapi
 urllib3==2.5.0
-    # via sentry-sdk
+    # via
+    #   requests
+    #   sentry-sdk
 uvicorn==0.38.0
     # via
     #   fastapi
