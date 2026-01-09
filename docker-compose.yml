@@ -8,6 +8,14 @@ services:
       - "8000:8000"
     depends_on:
       - db_postgres
+    environment:
+      - "SECRET_KEY=gV64m9aIzFG4qpgVphvQbPQrtAO0nM-7YwwOvu0XPt5KJOjAy4AfgLkqJXYEt"
+      - "ALGORITHM=HS256"
+      - "POSTGRES_USER=postgres_container"
+      - "POSTGRES_PASSWORD=postgres_container"
+      - "POSTGRES_HOST=db_postgres"
+      - "POSTGRES_PORT=5432"
+      - "POSTGRES_DB=postgres"
     labels:
       - "logging=promtail"
       - "service=fastapi"
@@ -16,8 +24,12 @@ services:
     image: postgres:15
     container_name: app_postgres_container
     restart: always
-    env_file:
-      - .env
+    environment:
+      - "POSTGRES_USER=postgres_container"
+      - "POSTGRES_PASSWORD=postgres_container"
+      - "POSTGRES_PORT=5432"
+      - "POSTGRES_DB=postgres"
+    
     volumes:
       - app_postgres:/var/lib/postgresql/data
     ports:
