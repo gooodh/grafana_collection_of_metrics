@@ -11,55 +11,55 @@ groups:
           summary: "FastAPI приложение недоступно"
           description: "FastAPI приложение {{ $labels.instance }} недоступно более 1 минуты"
 
-      # Алерт при проблемах с БД
-      - alert: DatabaseConnectionDown
-        expr: database_connection_status == 0
+      # Алерт при проблемах с PostgreSQL (используем postgres_exporter)
+      - alert: PostgreSQLConnectionDown
+        expr: pg_up == 0
         for: 30s
         labels:
           severity: critical
         annotations:
-          summary: "Потеряно соединение с базой данных"
-          description: "База данных недоступна для приложения {{ $labels.instance }}"
+          summary: "PostgreSQL недоступен"
+          description: "PostgreSQL недоступен для postgres_exporter на {{ $labels.instance }}"
 
-      # Алерт при медленном отклике БД
-      - alert: DatabaseSlowResponse
-        expr: database_response_time_seconds > 1
+      # Алерт при медленном отклике БД (используем postgres_exporter)
+      - alert: PostgreSQLSlowResponse
+        expr: increase(pg_stat_database_blk_read_time[5m]) > 1000
         for: 2m
         labels:
           severity: warning
         annotations:
-          summary: "Медленный отклик базы данных"
-          description: "База данных отвечает медленно: {{ $value }}s на {{ $labels.instance }}"
+          summary: "Медленный отклик PostgreSQL"
+          description: "PostgreSQL медленно отвечает на запросы в базе {{ $labels.datname }}"
 
-      # Алерт при высокой нагрузке на CPU
+      # Алерт при высокой нагрузке на CPU (используем системные метрики хоста)
       - alert: HighCPUUsage
-        expr: system_cpu_percent > 80
+        expr: rate(process_cpu_seconds_total[5m]) * 100 > 80
         for: 5m
         labels:
           severity: warning
         annotations:
           summary: "Высокая нагрузка на CPU"
-          description: "CPU использование {{ $value }}% на {{ $labels.instance }}"
+          description: "CPU использование высокое на {{ $labels.instance }}"
 
-      # Алерт при высоком использовании памяти
+      # Алерт при высоком использовании памяти (используем системные метрики процесса)
       - alert: HighMemoryUsage
-        expr: system_memory_percent > 85
+        expr: process_resident_memory_bytes / 1024 / 1024 > 500
         for: 5m
         labels:
           severity: warning
         annotations:
           summary: "Высокое использование памяти"
-          description: "Память использована на {{ $value }}% на {{ $labels.instance }}"
+          description: "Процесс использует {{ $value }}MB памяти на {{ $labels.instance }}"
 
-      # Алерт при высоком использовании диска
+      # Алерт при высоком использовании диска (используем postgres_exporter)
       - alert: HighDiskUsage
-        expr: system_disk_percent > 90
+        expr: pg_stat_database_datsize > 10737418240  # 10GB
         for: 10m
         labels:
-          severity: critical
+          severity: warning
         annotations:
-          summary: "Критически высокое использование диска"
-          description: "Диск использован на {{ $value }}% на {{ $labels.instance }}"
+          summary: "Большой размер базы данных"
+          description: "База данных {{ $labels.datname }} занимает {{ $value }} байт"
 
       # Алерт при высоком количестве медленных запросов
       - alert: HighSlowRequestsRate
@@ -90,3 +90,85 @@ groups:
         annotations:
           summary: "Health check endpoints возвращают ошибки"
           description: "Health check endpoint {{ $labels.endpoint }} возвращает статус {{ $labels.status }} на {{ $labels.instance }}"
+
+  - name: postgresql_alerts
+    rules:
+      # Алерт при недоступности PostgreSQL
+      - alert: PostgreSQLDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL недоступен"
+          description: "PostgreSQL сервер {{ $labels.instance }} недоступен более 1 минуты"
+
+      # Алерт при высоком количестве подключений
+      - alert: PostgreSQLTooManyConnections
+        expr: sum(pg_stat_database_numbackends) / pg_settings_max_connections * 100 > 80
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Слишком много подключений к PostgreSQL"
+          description: "PostgreSQL использует {{ $value }}% от максимального количества подключений"
+
+      # Алерт при критическом количестве подключений
+      - alert: PostgreSQLConnectionsNearLimit
+        expr: sum(pg_stat_database_numbackends) / pg_settings_max_connections * 100 > 95
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Критическое количество подключений к PostgreSQL"
+          description: "PostgreSQL использует {{ $value }}% от максимального количества подключений"
+
+      # Алерт при высоком проценте откатов транзакций
+      - alert: PostgreSQLHighRollbackRate
+        expr: rate(pg_stat_database_xact_rollback[5m]) / rate(pg_stat_database_xact_commit[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Высокий процент откатов транзакций в PostgreSQL"
+          description: "База данных {{ $labels.datname }} имеет {{ $value | humanizePercentage }} откатов транзакций"
+
+      # Алерт при блокировках
+      - alert: PostgreSQLDeadlocks
+        expr: rate(pg_stat_database_deadlocks[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Обнаружены deadlocks в PostgreSQL"
+          description: "База данных {{ $labels.datname }} имеет {{ $value }} deadlocks в секунду"
+
+      # Алерт при быстром росте размера базы данных
+      - alert: PostgreSQLDatabaseSizeGrowth
+        expr: increase(pg_stat_database_datsize[1h]) > 1073741824  # 1GB
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Быстрый рост размера базы данных PostgreSQL"
+          description: "База данных {{ $labels.datname }} выросла на {{ $value }} байт за последний час"
+
+      # Алерт при низкой производительности запросов
+      - alert: PostgreSQLSlowQueries
+        expr: pg_stat_activity_max_tx_duration > 300  # 5 минут
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Медленные запросы в PostgreSQL"
+          description: "Обнаружены запросы, выполняющиеся более {{ $value }} секунд"
+
+      # Алерт при высоком использовании временных файлов
+      - alert: PostgreSQLHighTempFileUsage
+        expr: rate(pg_stat_database_temp_bytes[5m]) > 104857600  # 100MB/s
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Высокое использование временных файлов в PostgreSQL"
+          description: "База данных {{ $labels.datname }} создает {{ $value }} байт/с временных файлов"

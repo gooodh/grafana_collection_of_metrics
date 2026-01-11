@@ -29,11 +29,20 @@ services:
       - "POSTGRES_PASSWORD=postgres_container"
       - "POSTGRES_PORT=5432"
       - "POSTGRES_DB=postgres"
-    
     volumes:
       - app_postgres:/var/lib/postgresql/data
     ports:
       - 5432:5432
+  
+  postgres_exporter:
+    image: prometheuscommunity/postgres-exporter:v0.15.0
+    container_name: postgres_exporter
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres_container:postgres_container@db_postgres:5432/postgres?sslmode=disable"
+    ports:
+      - "9187:9187"
+    depends_on:
+      - db_postgres
 
   pgadmin:
     image: dpage/pgadmin4
