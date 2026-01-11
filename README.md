@@ -14,11 +14,11 @@ The main goal of the project is to show how to integrate and configure an observ
 
 The project includes a ready-made FastAPI application with an authentication system that generates metrics and logs to demonstrate monitoring capabilities.
 
-![Grafana Dashboard - Metrics Overview](temp/imgs/screenshot_1.png)
-![Grafana Dashboard - DOWN APP](temp/imgs/screenshot_2.png)
-![Postrges - UNHEALTHY](temp/imgs/screenshot_3.png)
-![Postgres_exporter - System Monitoring](temp/imgs/screenshot_4.png)
-![Postgres_exporter - System Monitoring](temp/imgs/screenshot_4.png)
+![Grafana Dashboard - Metrics Overview](load_testing/temp/imgs/screenshot_1.png)
+![Grafana Dashboard - DOWN APP](load_testing/temp/imgs/screenshot_2.png)
+![Postrges - UNHEALTHY](load_testing/temp/imgs/screenshot_3.png)
+![Postgres_exporter - System Monitoring](load_testing/temp/imgs/screenshot_4.png)
+![Postgres_exporter - System Monitoring](load_testing/temp/imgs/screenshot_4.png)
 
 ## Project Architecture
 
