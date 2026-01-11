@@ -10,38 +10,15 @@ The main goal of the project is to show how to integrate and configure an observ
 - **Prometheus** — collection and storage of application metrics
 - **Loki** — aggregation and storage of logs
 - **Promtail** — agent for collecting logs and sending them to Loki
+- **Postgres Exporter** — экспортер метрик PostgreSQL для мониторинга состояния базы данных
 
 The project includes a ready-made FastAPI application with an authentication system that generates metrics and logs to demonstrate monitoring capabilities.
 
-## What the Monitoring System Includes
-
-### Grafana Dashboard
-- Visualization of application performance metrics
-- Monitoring of HTTP requests, response time, errors
-- Real-time log display
-- Configured alerts and notifications
-
-### Prometheus Metrics
-- Collection of FastAPI application metrics
-- Monitoring of system resources (CPU, memory, disk)
-- Database and external service metrics
-- Custom business metrics
-
-### Loki Logs Aggregation
-- Centralized storage of application logs
-- Structured logs with labels
-- Fast log search and filtering
-- Integration with Grafana for metrics and logs correlation
-
-### Promtail Log Collection
-- Automatic log collection from containers
-- Log parsing and enrichment with labels
-- Real-time log sending to Loki
-
-![Grafana Dashboard - Metrics Overview](ab/screenshot_1.png)
-![Grafana Dashboard - Detailed Analytics](ab/screenshot_2.png)
-![Loki Logs - Log Viewing](ab/screenshot_3.png)
-![Prometheus Metrics - System Monitoring](ab/screenshot_4.png)
+![Grafana Dashboard - Metrics Overview](temp/imgs/screenshot_1.png)
+![Grafana Dashboard - DOWN APP](temp/imgs/screenshot_2.png)
+![Postrges - UNHEALTHY](temp/imgs/screenshot_3.png)
+![Postgres_exporter - System Monitoring](temp/imgs/screenshot_4.png)
+![Postgres_exporter - System Monitoring](temp/imgs/screenshot_4.png)
 
 ## Project Architecture
 
@@ -86,6 +63,7 @@ After startup, the following services will be available:
 - **Grafana**: http://localhost:3000 (admin/admin)
 - **Prometheus**: http://localhost:9090
 - **Loki**: http://localhost:3100
+- **Postgres Exporter**: http://localhost:9187 (метрики PostgreSQL)
 
 ### 4. Generate Test Data
 
@@ -103,14 +81,14 @@ ab -n 1000 -c 10 http://localhost:8000/
 
 ### Health Check Endpoints
 
-Приложение предоставляет расширенные health check endpoints с интеграцией Prometheus:
+The app provides advanced health check endpoints with Prometheus integration:
 
-- `GET /health` - базовая проверка состояния
-- `GET /health/detailed` - детальная проверка с БД и системными ресурсами  
-- `GET /health/ready` - readiness probe для Kubernetes
-- `GET /health/live` - liveness probe для Kubernetes
-- `GET /health/metrics` - метрики здоровья в JSON формате
-- `GET /metrics` - Prometheus метрики
+- `GET /health` - basic health check
+- `GET /health/detaile` - detailed check with the database and system resources  
+- `GET /health/read` - readiness probe for Kubernetes
+- `GET /health/liv` - liveness probe for Kubernetes
+- `GET /health/metric` - health metrics in JSON format
+- `GET /metrics` - Prometheus metrics
 
 ```bash
 # Тестирование health endpoints
@@ -120,65 +98,105 @@ make health-check
 make health-metrics
 ```
 
-### Prometheus Метрики
+### Prometheus Metrics
 
-Приложение автоматически экспортирует следующие метрики:
+The application automatically exports the following metrics:
 
-**Стандартные FastAPI метрики:**
-- `http_requests_total` - общее количество HTTP запросов
-- `http_request_duration_seconds` - время выполнения запросов
-- `http_requests_inprogress` - запросы в процессе выполнения
+**Standard FastAPI metrics:**
 
-**Кастомные метрики здоровья:**
-- `database_connection_status` - статус подключения к БД
-- `database_response_time_seconds` - время отклика БД
-- `system_cpu_percent` - использование CPU
-- `system_memory_percent` - использование памяти
-- `system_disk_percent` - использование диска
-- `health_check_requests_total` - количество health check запросов
-- `fast_requests_total` - количество быстрых запросов (< 100ms)
-- `slow_requests_total` - количество медленных запросов (> 1s)
+- `http_requests_total` - total number of HTTP requests
+- `http_request_duration_seconds` - request execution time
+- `http_requests_inprogress` - requests in progress
 
-### Prometheus
-Configuration in `prometheus.yml` file:
-- Collect metrics from FastAPI application every 15 seconds
-- Monitor Prometheus itself
-- Configure alerting rules
+**Custom health metrics:**
+- `database_connection_status` - the status of connection to the database
+- `database_response_time_seconds` - DB response time
+- `system_cpu_percent` - CPU usage
+- `system_memory_percent` - memory usage
+- `system_disk_percent` - disk usage
+- `health_check_requests_total` - number of health check requests
+- `fast_requests_total` - number of fast requests (< 100ms)
+- `slow_requests_total` - number of slow requests (> 1s)
 
-### Loki
-Configuration in `loki-config.yml` file:
-- Store logs in local filesystem
-- Configure indexes for fast search
-- Log retention settings
+**PostgreSQL metrics (via postgres_exporter):**
+- `pg_up` - статус доступности PostgreSQL
+- `pg_stat_database_*` - статистика по базам данных
+- `pg_stat_user_tables_*` - статистика по пользовательским таблицам
+- `pg_locks_count` - количество блокировок
+- `pg_stat_activity_count` - количество активных соединений
+- `pg_database_size_bytes` - размер базы данных в байтах
+- `pg_stat_bgwriter_*` - статистика фонового процесса записи
 
-### Promtail
-Configuration in `promtail-config.yaml` file:
-- Collect logs from Docker containers
-- Parse JSON logs
-- Add labels for filtering
+## PostgreSQL Monitoring с Postgres Exporter
 
-### Grafana
-- Pre-installed dashboards for FastAPI monitoring
-- Data sources: Prometheus and Loki
-- Configured alerts and notifications
+Postgres Exporter is a specialized metric exporter for PostgreSQL that collects detailed information about the status and performance of the database.
 
-## Useful Commands
+### Main features
 
-```bash
-# View service logs
-docker compose logs -f grafana
-docker compose logs -f prometheus
-docker compose logs -f loki
-docker compose logs -f promtail
+**Performance monitoring:**
+- Query execution statistics
+- Database response time
+- Number of active connections
+- Using indexes
 
-# Restart individual service
-docker compose restart grafana
+**Resource monitoring:**
+- Size of databases and tables
+- Disk space usage
+- Cache statistics
+- Blockages and conflicts
 
-# Stop all services
-docker compose down
+**Availability monitoring:**
+- The status of the connection to PostgreSQL
+- Checking the functionality of replicas
+- Monitoring of PostgreSQL processes
 
-# Clean up data (careful!)
-docker compose down -v
+### Configuration
+
+Postgres Exporter is configured via environment variables in docker-compose.yml:
+
+```yaml
+postgres_exporter:
+  image: prometheuscommunity/postgres-exporter
+  environment:
+    DATA_SOURCE_NAME: "postgresql://username:password@postgres:5432/database?sslmode=disable"
+  ports:
+    - "9187:9187"
+```
+
+### Key metrics for monitoring
+
+**Performance:**
+- `pg_stat_database_tup_returned` - the number of rows returned
+- `pg_stat_database_tup_fetched` - number of extracted rows
+- `pg_stat_database_xact_commit` - number of recorded transactions
+- `pg_stat_database_xact_rollback` - number of transactions rolled out
+
+**Connections:**
+- `pg_stat_activity_count` - current number of connections
+- `pg_settings_max_connections` - maximum number of connections
+
+**Dimensions:**
+- `pg_database_size_bytes` - the size of the database
+- `pg_stat_user_tables_n_tup_ins` - number of inserted rows
+- `pg_stat_user_tables_n_tup_upd` - number of updated rows
+- `pg_stat_user_tables_n_tup_del` - number of deleted rows
+
+### Alerts and notifications
+
+Recommended alerts for PostgreSQL:
+
+```yaml
+# Высокое количество соединений
+- alert: PostgreSQLTooManyConnections
+  expr: pg_stat_activity_count > (pg_settings_max_connections * 0.8)
+  
+# Низкая производительность
+- alert: PostgreSQLSlowQueries
+  expr: rate(pg_stat_database_tup_returned[5m]) < 100
+  
+# Проблемы с доступностью
+- alert: PostgreSQLDown
+  expr: pg_up == 0
 ```
 
 ## Monitoring in Different Environments
