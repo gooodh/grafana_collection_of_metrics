@@ -45,7 +45,7 @@ fastapi==0.119.0
     # via fastapi-sqlalchemy-temp
 fastapi-cli==0.0.13
     # via fastapi
-fastapi-cloud-cli==0.3.1
+fastapi-cloud-cli==0.8.0
     # via fastapi-cli
 greenlet==3.2.4 ; platform_machine == 'AMD64' or platform_machine == 'WIN32' or platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'ppc64le' or platform_machine == 'win32' or platform_machine == 'x86_64'
     # via sqlalchemy
